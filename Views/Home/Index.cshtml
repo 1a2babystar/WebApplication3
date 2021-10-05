@@ -1,0 +1,20 @@
+﻿@model List<WebApplication3.Models.Reducednotice>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Notice board</h1>
+    @foreach (var item in Model)
+    {
+        <div>@item.title @item.date</div>
+        @using (Html.BeginForm("Detail", "Home", FormMethod.Post, new { Id = @item.id }))
+                {
+                    <button>details</button>
+                }
+    }
+    @using (Html.BeginForm("Createhandler", "Home"))
+    {
+        <button>Write</button>
+    }
+</div>
