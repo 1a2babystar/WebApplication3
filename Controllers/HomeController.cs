@@ -54,5 +54,11 @@ namespace WebApplication3.Controllers
             var noticeli = NoticeDAO.GetNotices();
             return View("Index", noticeli);
         }
+
+        public ActionResult GetNotice(int id)
+        {
+            var noticeli = NoticeDAO.GetNotices();
+            return Json(noticeli);
+        }
     }
 }
