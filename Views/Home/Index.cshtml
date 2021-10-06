@@ -1,20 +1,45 @@
-﻿@model List<WebApplication3.Models.Reducednotice>
-@{
-    ViewData["Title"] = "Home Page";
-}
+﻿@model IEnumerable<WebApplication3.Models.Reducednotice>
 
-<div class="text-center">
-    <h1 class="display-4">Notice board</h1>
-    @foreach (var item in Model)
-    {
-        <div>@item.title @item.date</div>
-        @using (Html.BeginForm("Detail", "Home", FormMethod.Post, new { Id = @item.id }))
-                {
-                    <button>details</button>
-                }
-    }
-    @using (Html.BeginForm("Createhandler", "Home"))
-    {
-        <button>Write</button>
-    }
-</div>
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<head>
+    <meta charset="utf-8">
+</head>
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.date)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.date)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.id }) |
+                    @Html.ActionLink("Details", "Details", new { id = item.id }) |
+                    @Html.ActionLink("Delete", "Delete", new { id = item.id })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
