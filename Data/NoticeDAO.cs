@@ -13,12 +13,11 @@ namespace WebApplication3.Data
         private static string connectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Test;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
         public static List<Reducednotice> GetNotices()
         {
-            string queryString = "select title, date, Id from dbo.Notices";
             List<Reducednotice> returnlist = new List<Reducednotice>();
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlCommand command = new SqlCommand(queryString, connection);
+                SqlCommand command = new SqlCommand("GetAllNotices", connection);
                 try
                 {
                     connection.Open();
@@ -45,10 +44,10 @@ namespace WebApplication3.Data
         internal static int Delete(int id)
         {
             int newID = 0;
-            string queryString = "DELETE FROM dbo.Notices WHERE Id = @id";
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlCommand command = new SqlCommand(queryString, connection);
+                SqlCommand command = new SqlCommand("DeleteNotice", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
                 try
                 {
                     command.Parameters.Add("@id", System.Data.SqlDbType.Int).Value = id;
@@ -66,7 +65,6 @@ namespace WebApplication3.Data
 
         public static bool CreateNotice(Notice notice)
         {
-            string queryString = "INSERT INTO dbo.Notices Values(@writer, @title, @date, @content)";
             bool ret = false;
 
             var culture = new CultureInfo("en-GB");
@@ -74,7 +72,8 @@ namespace WebApplication3.Data
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlCommand command = new SqlCommand(queryString, connection);
+                SqlCommand command = new SqlCommand("CreateNotice", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
                 try
                 {
                     command.Parameters.Add("@writer", System.Data.SqlDbType.VarChar, 50).Value = notice.writer;
@@ -97,14 +96,14 @@ namespace WebApplication3.Data
 
         public static bool UpdateNotice(Notice notice)
         {
-            string queryString = "UPDATE dbo.Notices SET title = @title, content = @content, date = @date WHERE Id = @id";
             bool ret = false;
             var culture = new CultureInfo("en-GB");
             string time = DateTime.Now.ToString(culture);
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlCommand command = new SqlCommand(queryString, connection);
+                SqlCommand command = new SqlCommand("UpdateNotice", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
                 try
                 {
                     command.Parameters.Add("@title", System.Data.SqlDbType.VarChar, 50).Value = notice.title;
@@ -127,11 +126,11 @@ namespace WebApplication3.Data
 
         public static Notice ShowDetail(int id)
         {
-            string queryString = "SELECT * FROM dbo.Notices WHERE Id = @id";
             Notice notice = new Notice();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlCommand command = new SqlCommand(queryString, connection);
+                SqlCommand command = new SqlCommand("GetOneNotice", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
                 try
                 {
                     command.Parameters.Add("@id", System.Data.SqlDbType.Int).Value = id;
