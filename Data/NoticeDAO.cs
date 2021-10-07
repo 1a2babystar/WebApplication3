@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using WebApplication3.Models;
@@ -41,8 +42,9 @@ namespace WebApplication3.Data
             return returnlist;
         }
 
-        internal static void Delete(int id)
+        internal static int Delete(int id)
         {
+            int newID = 0;
             string queryString = "DELETE FROM dbo.Notices WHERE Id = @id";
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -52,21 +54,23 @@ namespace WebApplication3.Data
                     command.Parameters.Add("@id", System.Data.SqlDbType.Int).Value = id;
 
                     connection.Open();
-                    int newID = command.ExecuteNonQuery();
+                    newID = command.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
                 }
-
             }
+            return newID;
         }
 
         public static bool CreateNotice(Notice notice)
         {
             string queryString = "INSERT INTO dbo.Notices Values(@writer, @title, @date, @content)";
             bool ret = false;
-            string time = DateTime.Now.ToString("HH:mm:ss tt");
+
+            var culture = new CultureInfo("en-GB");
+            string time = DateTime.Now.ToString(culture);
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -95,7 +99,8 @@ namespace WebApplication3.Data
         {
             string queryString = "UPDATE dbo.Notices SET title = @title, content = @content, date = @date WHERE Id = @id";
             bool ret = false;
-            string time = DateTime.Now.ToString("HH:mm:ss tt");
+            var culture = new CultureInfo("en-GB");
+            string time = DateTime.Now.ToString(culture);
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {

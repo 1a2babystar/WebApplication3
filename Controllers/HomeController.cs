@@ -15,50 +15,39 @@ namespace WebApplication3.Controllers
             var noticeli = NoticeDAO.GetNotices();
             return View(noticeli);
         }
-
-        public IActionResult Details(int Id)
-        {
-            Notice notice = NoticeDAO.ShowDetail(Id);
-            return View(notice);
-        }
-
-        public IActionResult Create()
-        {
-            return View("CreateView");
-        }
-
-        public IActionResult Edit(int Id)
-        {
-            Notice notice = NoticeDAO.ShowDetail(Id);
-            return View("Update",notice);
-        }
-
-        public IActionResult Delete(int Id)
-        {
-            NoticeDAO.Delete(Id);
-            var noticeli = NoticeDAO.GetNotices();
-            return View("Index", noticeli);
-        }
-
-
-        public IActionResult ProcessCreate(Notice notice)
-        {
-            NoticeDAO.CreateNotice(notice);
-            var noticeli = NoticeDAO.GetNotices();
-            return View("Index", noticeli);
-        }
-
-        public IActionResult ProcessEdit(Notice notice)
-        {
-            NoticeDAO.UpdateNotice(notice);
-            var noticeli = NoticeDAO.GetNotices();
-            return View("Index", noticeli);
-        }
-
-        public ActionResult GetNotice(int id)
+        public ActionResult GetNotice()
         {
             var noticeli = NoticeDAO.GetNotices();
             return Json(noticeli);
+        }
+
+        public ActionResult GetOneNotice(int id)
+        {
+            var notice = NoticeDAO.ShowDetail(id);
+            return Json(notice);
+        }
+
+        public ActionResult CreateNew(string title, string content, string writer)
+        {
+            Notice notice = new Notice();
+            notice.title = title;
+            notice.contents = content;
+            notice.writer = writer;
+            return Json(NoticeDAO.CreateNotice(notice));
+        }
+
+        public ActionResult UpdateOne(int Id, string title, string content)
+        {
+            Notice notice = new Notice();
+            notice.id = Id;
+            notice.title = title;
+            notice.contents = content;
+            return Json(NoticeDAO.UpdateNotice(notice));
+        }
+
+        public ActionResult DeleteItem(int id)
+        {
+            return Json(NoticeDAO.Delete(id));
         }
     }
 }

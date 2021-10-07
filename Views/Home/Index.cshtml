@@ -4,28 +4,229 @@
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<head>
-    <meta charset="utf-8">
-</head>
-<h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
 
 <script type="text/javascript">
-    function getData() {
+    function getNotices() {
         $.ajax({
             url: '/Home/GetNotice',
             type: 'POST',
             success: function (data) {
-                console.log(data);
+                renderdata(data);
             },
             error: function (xhr) {
                 alert(xhr);
             }
         });
     }
+    window.onload = getNotices();
+
+    function createProcess() {
+        let tit = document.getElementById("title").value;
+        let cont = document.getElementById("content").value;
+        let writ = document.getElementById("writer").value;
+        $.ajax({
+            url: '/Home/CreateNew',
+            type: 'POST',
+            data: { title: tit, content: cont, writer: writ },
+            success: function (data) {
+                getNotices();
+                changerenderO();
+            },
+            error: function (xhr) {
+                alert(xhr);
+            }
+        });
+        return 1;
+    }
+
+    function updateProcess() {
+        let tit = document.getElementById("title").value;
+        let cont = document.getElementById("content").value;
+        let id = document.getElementById("id").value;
+        $.ajax({
+            url: '/Home/UpdateOne',
+            type: 'POST',
+            data: { id: id, title: tit, content: cont },
+            success: function (data) {
+                getNotices();
+                changerenderO();
+            },
+            error: function (xhr) {
+                alert(xhr);
+            }
+        });
+        return 1;
+    }
+
+    function changerenderO() {
+        document.getElementById('writer-section').style.display = 'block';
+        let creform = document.getElementById("create_form");
+        let table = document.getElementById("lis");
+        table.style.display = "block";
+        creform.style.display = "none";
+        Clear();
+    }
+    function changerenderX() {
+        let creform = document.getElementById("create_form");
+        let table = document.getElementById("lis");
+        creform.style.display = "block";
+        table.style.display = "none";
+    }
+
+    function Clear() {
+        document.getElementById("title").value = '';
+        document.getElementById("content").value = '';
+        document.getElementById("writer").value = '';
+    }
+
+    function Create() {
+        changerenderX();
+    }
+
+    function Edit(id) {
+        changerenderX();
+        document.getElementById('writer-section').style.display = 'none';
+        $.ajax({
+            url: '/Home/GetOneNotice',
+            type: 'POST',
+            data: { Id: id },
+            success: function (data) {
+                document.getElementById("id").value = data.id;
+                document.getElementById("title").value = data.title;
+                document.getElementById("content").value = data.contents;
+            },
+            error: function (xhr) {
+                alert(xhr);
+            }
+        });
+    }
+
+    function Detail(id) {
+        document.getElementById("lis").style.display = 'none';
+        document.getElementById("details").style.display = 'block';
+        $.ajax({
+            url: '/Home/GetOneNotice',
+            type: 'POST',
+            data: { Id: id },
+            success: function (data) {
+                document.getElementById("detailtitle").innerHTML = data.title;
+                document.getElementById("detailcontent").innerHTML = data.contents;
+                document.getElementById("detailwriter").innerHTML = data.writer;
+                document.getElementById("detaildate").innerHTML = data.date;
+            },
+            error: function (xhr) {
+                alert(xhr);
+            }
+        });
+
+    }
+
+    function Delete(id) {
+        $.ajax({
+            url: '/Home/DeleteItem',
+            type: 'POST',
+            data: { Id: id },
+            success: function (data) {
+                getNotices();
+            },
+            error: function (xhr) {
+                alert(xhr);
+            }
+        });
+    }
+
+    function Submit() {
+        let w = document.getElementById("writer-section");
+        //update
+        if (w.style.display == 'none') {
+            updateProcess(document.getElementById("id").value);
+        }
+        //create
+        else {
+            createProcess();   
+        }
+    }
+
+    function goback() {
+        getNotices();
+        changerenderO();
+    }
+
+    function tableinfo() {
+        let table = document.getElementById("noticetable");
+        table.innerHTML = "";
+        let row = table.insertRow(0);
+        let cell1 = row.insertCell(0);
+        let cell2 = row.insertCell(1);
+        let cell3 = row.insertCell(2);
+        cell1.innerHTML = "Title";
+        cell2.innerHTML = "Date";
+        cell3.innerHTML = "Operations";
+    }
+
+    function renderdata(data) {
+        tableinfo();
+        let table = document.getElementById("noticetable");
+        for (item in data) {
+            let row = table.insertRow(1);
+            let cell1 = row.insertCell(0);
+            let cell2 = row.insertCell(1);
+            let cell3 = row.insertCell(2);
+            cell1.innerHTML = data[item].title;
+            cell2.innerHTML = data[item].date;
+            cell3.innerHTML = `<button class='Edit' onclick='Edit(${data[item].id})'>Edit</button ><button class='Details' onclick='Detail(${data[item].id})'>Details</button ><button class='Delete' onclick='Delete(${data[item].id})'>Delete</button>`;
+        }
+    }
 </script>
 
-<button onclick="getData()">Click</button>
+<style>
+    #noticetable {
+        display: flex;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    #create_form{
+        display: none;
+    }
+
+    #details{
+        display: none;
+    }
+</style>
+<div id="lis">
+    <table id="noticetable">
+    </table>
+    <button onclick="Create()">Create New</button>
+</div>
+
+<div id="create_form">
+    <div>Title</div>
+    <input type="text" id="title" />
+    <div>Content</div>
+    <input type="text" id="content" />
+    <div id="writer-section">
+        <div>Writer</div>
+        <input type="text" id="writer" />
+    </div>
+    <input type="hidden" id="id" />
+    <br />
+    <button id="submitbtn" onclick="Submit()">Submit</button>
+    <br />
+    <button onclick="goback()">Back to the list</button>
+</div>
+
+<div id="details">
+    <div style="font-weight: bold;">Title</div>
+    <div id="detailtitle"></div>
+    <div style="font-weight: bold;">Content</div>
+    <div id="detailcontent"></div>
+    <div style="font-weight: bold;">Writer</div>
+    <div id="detailwriter"></div>
+    <div style="font-weight: bold;">Date</div>
+    <div id="detaildate"></div>
+    <br />
+    <button onclick="getNotices();document.getElementById('lis').style.display = 'block';document.getElementById('details').style.display = 'none';">Back to the list</button>
+</div>
+
