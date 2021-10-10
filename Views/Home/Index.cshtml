@@ -1,0 +1,97 @@
+﻿@model IEnumerable<WebApplication3.Models.Notice>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        var dataSource = new kendo.data.DataSource({
+            type: "json",
+            transport: {
+                read: {
+                    url: "@Url.Action("GetNotice", "Home")",
+                    contentType: "application/json",
+                    dataType: "json",
+                    type: "POST"
+                },
+                update: {
+                    url: "@Url.Action("UpdateOne", "Home")",
+                    contentType: "application/json",
+                    dataType: "json",
+                    type: "POST"
+                },
+                create: {
+                    url: "@Url.Action("CreateNew", "Home")",
+                    contentType: "application/json",
+                    dataType: "json",
+                    type: "POST"
+                },
+                destroy: {
+                    url: "@Url.Action("DeleteItem", "Home")",
+                    contentType: "application/json",
+                    dataType: "json",
+                    type: "POST"
+                },
+                parameterMap: function (options, operation) {
+                    if (operation != "read") {
+                        return kendo.stringify(options.models);
+                    }
+                }
+            },
+            batch: true,
+            pageSize: 10,
+            schema: {
+                model: {
+                    id: "id",
+                    fields: {
+                        id: { type: "int", editable: false },
+                        date: { type: "string", editable: false },
+                        title: { type: "string" },
+                        writer: { type: "string" },
+                        contents: { type: "string" }
+                    }
+                }
+            },
+        });
+        $("#noticetable").kendoGrid({
+            dataSource: dataSource,
+            pageable: true,
+            toolbar: ["create"],
+            columns: [
+                { field: "id", title: "Id", sortable: true},
+                { field: "title", title: "Title" },
+                { field: "date", title: "Date" },
+                { field: "contents", title: "Content"},
+                { field: "writer", title: "Writer" },
+                {command: ["edit", "destroy"], title: "Operations"}
+            ],
+            editable: "popup",
+            sortable: true,
+            groupable: true,
+            filterable: true
+        });
+    });
+
+    function onGridEdit(e) {
+        e.sender.one("dataBound", function (e) {
+            e.sender.dataSource.read();
+        });
+    }
+
+    function bindDataAndRefresh(e) {
+        var grid = $("#noticetable").data("kendoGrid");
+        grid.bind("dataBound", onGridEdit(e));
+    }
+
+    $(document).ready(function () {
+        var grid = $("#noticetable").data("kendoGrid");
+        grid.bind("save", bindDataAndRefresh);
+    });
+</script>
+
+<table id="noticetable">
+</table>
