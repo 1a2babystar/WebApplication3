@@ -1,4 +1,4 @@
-﻿@model IEnumerable<WebApplication3.Models.Reducednotice>
+﻿@model IEnumerable<Notice_board.Models.Notice>
 
 @{
     ViewData["Title"] = "Index";
@@ -7,226 +7,95 @@
 
 
 <script type="text/javascript">
-    function getNotices() {
-        $.ajax({
-            url: '/Home/GetNotice',
-            type: 'POST',
-            success: function (data) {
-                renderdata(data);
+    $(document).ready(function () {
+        var dataSource = new kendo.data.DataSource({
+            type: "json",
+            transport: {
+                read: {
+                    url: "@Url.Action("GetNotice", "Home")",
+                    contentType: "application/json",
+                    dataType: "json",
+                    type: "POST"
+                },
+                update: {
+                    url: "@Url.Action("UpdateOne", "Home")",
+                    contentType: "application/json",
+                    dataType: "json",
+                    type: "POST"
+                },
+                create: {
+                    url: "@Url.Action("CreateNew", "Home")",
+                    contentType: "application/json",
+                    dataType: "json",
+                    type: "POST"
+                },
+                destroy: {
+                    url: "@Url.Action("DeleteItem", "Home")",
+                    contentType: "application/json",
+                    dataType: "json",
+                    type: "POST"
+                },
+                parameterMap: function (options, operation) {
+                    if (operation == "read") {
+                        if (options.sort) {
+                            if (options.sort.length == 0) {
+                                options.sort = { field: 'Id', dir: 'asc' };
+                            } else {
+                                options.sort = { field: options.sort[0]['field'], dir: options.sort[0]['dir'] };
+                            }
+                        }
+                    }
+                    return kendo.stringify(options);
+                }
             },
-            error: function (xhr) {
-                alert(xhr);
-            }
+            pageSize: 10,
+            serverPaging: true,
+            serverSorting: true,
+            serverFiltering: true,
+            schema: {
+                model: {
+                    id: "id",
+                    fields: {
+                        id: { title: "Id", sortable: true, editable: false },
+                        title: { title: "Title", sortable: false },
+                        date: { title: "Date", sortable: false, editable: false },
+                        content: { title: "Content", sortable: false },
+                        writer: { title: "Writer", sortable: false }
+                    }
+                },
+                data: "noticelist",
+                total: "total"
+            },
+        });
+        $("#noticetable").kendoGrid({
+            dataSource: dataSource,
+            pageable: true,
+            columns: [
+                { field: "id", title: "Id", sortable: true},
+                { field: "title", title: "Title", sortable: false },
+                { field: "date", title: "Date", sortable: false},
+                { field: "content", title: "Content", sortable: false},
+                { field: "writer", title: "Writer", sortable: false },
+                {command: ["edit", "destroy"], title: "Operations"}
+            ],
+            editable: "popup",
+            sortable: true,
+            filterable: true,
+            toolbar: ["create"]
+        });
+        var grid = $("#noticetable").data("kendoGrid");
+        grid.bind("save", bindDataAndRefresh);
+    });
+    function onGridEdit(e) {
+        e.sender.one("dataBound", function (e) {
+            e.sender.dataSource.read();
         });
     }
-    window.onload = getNotices();
-
-    function createProcess() {
-        let tit = document.getElementById("title").value;
-        let cont = document.getElementById("content").value;
-        let writ = document.getElementById("writer").value;
-        $.ajax({
-            url: '/Home/CreateNew',
-            type: 'POST',
-            data: { title: tit, content: cont, writer: writ },
-            success: function (data) {
-                getNotices();
-                changerenderO();
-            },
-            error: function (xhr) {
-                alert(xhr);
-            }
-        });
-        return 1;
-    }
-
-    function updateProcess() {
-        let tit = document.getElementById("title").value;
-        let cont = document.getElementById("content").value;
-        let id = document.getElementById("id").value;
-        $.ajax({
-            url: '/Home/UpdateOne',
-            type: 'POST',
-            data: { id: id, title: tit, content: cont },
-            success: function (data) {
-                getNotices();
-                changerenderO();
-            },
-            error: function (xhr) {
-                alert(xhr);
-            }
-        });
-        return 1;
-    }
-
-    function changerenderO() {
-        document.getElementById('writer-section').style.display = 'block';
-        let creform = document.getElementById("create_form");
-        let table = document.getElementById("lis");
-        table.style.display = "block";
-        creform.style.display = "none";
-        Clear();
-    }
-    function changerenderX() {
-        let creform = document.getElementById("create_form");
-        let table = document.getElementById("lis");
-        creform.style.display = "block";
-        table.style.display = "none";
-    }
-
-    function Clear() {
-        document.getElementById("title").value = '';
-        document.getElementById("content").value = '';
-        document.getElementById("writer").value = '';
-    }
-
-    function Create() {
-        changerenderX();
-    }
-
-    function Edit(id) {
-        changerenderX();
-        document.getElementById('writer-section').style.display = 'none';
-        $.ajax({
-            url: '/Home/GetOneNotice',
-            type: 'POST',
-            data: { Id: id },
-            success: function (data) {
-                document.getElementById("id").value = data.id;
-                document.getElementById("title").value = data.title;
-                document.getElementById("content").value = data.contents;
-            },
-            error: function (xhr) {
-                alert(xhr);
-            }
-        });
-    }
-
-    function Detail(id) {
-        document.getElementById("lis").style.display = 'none';
-        document.getElementById("details").style.display = 'block';
-        $.ajax({
-            url: '/Home/GetOneNotice',
-            type: 'POST',
-            data: { Id: id },
-            success: function (data) {
-                document.getElementById("detailtitle").innerHTML = data.title;
-                document.getElementById("detailcontent").innerHTML = data.contents;
-                document.getElementById("detailwriter").innerHTML = data.writer;
-                document.getElementById("detaildate").innerHTML = data.date;
-            },
-            error: function (xhr) {
-                alert(xhr);
-            }
-        });
-
-    }
-
-    function Delete(id) {
-        $.ajax({
-            url: '/Home/DeleteItem',
-            type: 'POST',
-            data: { Id: id },
-            success: function (data) {
-                getNotices();
-            },
-            error: function (xhr) {
-                alert(xhr);
-            }
-        });
-    }
-
-    function Submit() {
-        let w = document.getElementById("writer-section");
-        //update
-        if (w.style.display == 'none') {
-            updateProcess(document.getElementById("id").value);
-        }
-        //create
-        else {
-            createProcess();   
-        }
-    }
-
-    function goback() {
-        getNotices();
-        changerenderO();
-    }
-
-    function tableinfo() {
-        let table = document.getElementById("noticetable");
-        table.innerHTML = "";
-        let row = table.insertRow(0);
-        let cell1 = row.insertCell(0);
-        let cell2 = row.insertCell(1);
-        let cell3 = row.insertCell(2);
-        cell1.innerHTML = "Title";
-        cell2.innerHTML = "Date";
-        cell3.innerHTML = "Operations";
-    }
-
-    function renderdata(data) {
-        tableinfo();
-        let table = document.getElementById("noticetable");
-        for (item in data) {
-            let row = table.insertRow(1);
-            let cell1 = row.insertCell(0);
-            let cell2 = row.insertCell(1);
-            let cell3 = row.insertCell(2);
-            cell1.innerHTML = data[item].title;
-            cell2.innerHTML = data[item].date;
-            cell3.innerHTML = `<button class='Edit' onclick='Edit(${data[item].id})'>Edit</button ><button class='Details' onclick='Detail(${data[item].id})'>Details</button ><button class='Delete' onclick='Delete(${data[item].id})'>Delete</button>`;
-        }
+    function bindDataAndRefresh(e) {
+        var grid = $("#noticetable").data("kendoGrid");
+        grid.bind("dataBound", onGridEdit(e));
     }
 </script>
 
-<style>
-    #noticetable {
-        display: flex;
-        justify-content: center;
-        font-size: 20px;
-    }
-
-    #create_form{
-        display: none;
-    }
-
-    #details{
-        display: none;
-    }
-</style>
-<div id="lis">
-    <table id="noticetable">
-    </table>
-    <button onclick="Create()">Create New</button>
-</div>
-
-<div id="create_form">
-    <div>Title</div>
-    <input type="text" id="title" />
-    <div>Content</div>
-    <input type="text" id="content" />
-    <div id="writer-section">
-        <div>Writer</div>
-        <input type="text" id="writer" />
-    </div>
-    <input type="hidden" id="id" />
-    <br />
-    <button id="submitbtn" onclick="Submit()">Submit</button>
-    <br />
-    <button onclick="goback()">Back to the list</button>
-</div>
-
-<div id="details">
-    <div style="font-weight: bold;">Title</div>
-    <div id="detailtitle"></div>
-    <div style="font-weight: bold;">Content</div>
-    <div id="detailcontent"></div>
-    <div style="font-weight: bold;">Writer</div>
-    <div id="detailwriter"></div>
-    <div style="font-weight: bold;">Date</div>
-    <div id="detaildate"></div>
-    <br />
-    <button onclick="getNotices();document.getElementById('lis').style.display = 'block';document.getElementById('details').style.display = 'none';">Back to the list</button>
-</div>
-
+<table id="noticetable">
+</table>

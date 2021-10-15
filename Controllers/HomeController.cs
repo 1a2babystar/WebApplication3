@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
+using Notice_board.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,48 +9,39 @@ using System.Threading.Tasks;
 using WebApplication3.Data;
 using WebApplication3.Models;
 
-namespace WebApplication3.Controllers
+namespace Notice_board.Controllers
 {
     public class HomeController : Controller
     {
         public IActionResult Index()
         {
-            var noticeli = NoticeDAO.GetNotices();
-            return View(noticeli);
+            return View();
         }
-        public ActionResult GetNotice()
+        public ActionResult GetNotice([FromBody] Pageinfo pageinfo)
         {
-            var noticeli = NoticeDAO.GetNotices();
-            return Json(noticeli);
-        }
-
-        public ActionResult GetOneNotice(int id)
-        {
-            var notice = NoticeDAO.ShowDetail(id);
-            return Json(notice);
+            var noticedao = new NoticeDAO();
+            var noticeli = noticedao.GetList(pageinfo);
+            var rownum = noticedao.Getcount(pageinfo);
+            return Json(new {Noticelist = noticeli, total = rownum });
         }
 
-        public ActionResult CreateNew(string title, string content, string writer)
+        [HttpPost]
+        public ActionResult CreateNew([FromBody] Newnotice newnotice)
         {
-            Notice notice = new Notice();
-            notice.title = title;
-            notice.contents = content;
-            notice.writer = writer;
-            return Json(NoticeDAO.CreateNotice(notice));
+            var noticedao = new NoticeDAO();
+            return Json(noticedao.Create(newnotice));
         }
 
-        public ActionResult UpdateOne(int Id, string title, string content)
+        public ActionResult UpdateOne([FromBody] Notice notice)
         {
-            Notice notice = new Notice();
-            notice.id = Id;
-            notice.title = title;
-            notice.contents = content;
-            return Json(NoticeDAO.UpdateNotice(notice));
+            var noticedao = new NoticeDAO();
+            return Json(noticedao.Update(notice));
         }
-
-        public ActionResult DeleteItem(int id)
+        [HttpPost]
+        public ActionResult DeleteItem([FromBody] Notice notice)
         {
-            return Json(NoticeDAO.Delete(id));
+            var noticedao = new NoticeDAO();
+            return Json(noticedao.Delete(notice.id));
         }
     }
 }
